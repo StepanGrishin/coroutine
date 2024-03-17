@@ -1,0 +1,99 @@
+import Foundation
+
+class Printer {
+    func printWorld() {
+        DispatchQueue.global().async {
+            while true {
+                print("World")
+                sleep(1)
+            }
+        }
+    }
+    
+    func printHello() {
+        while true {
+            print("Hello,")
+            sleep(2)
+        }
+    }
+}
+
+let printer = Printer()
+printer.printWorld()
+printer.printHello()
+
+RunLoop.main.run()
+  ---------------------------------------
+  import Foundation
+
+func delayedSum1() -> Int {
+    sleep(2)
+    return 10
+}
+
+func delayedSum2() -> Int {
+    sleep(3)
+    return 20
+}
+
+let startTime = Date()
+
+// Последовательный вызов функций
+let result1 = delayedSum1()
+let result2 = delayedSum2()
+let sum = result1 + result2
+
+let endTime = Date()
+let timeElapsed = endTime.timeIntervalSince(startTime)
+print("Сумма (последовательный вызов): \(sum), Время выполнения: \(timeElapsed) секунд")
+
+// Асинхронный вызов функций
+let group = DispatchGroup()
+var asyncResult1 = 0
+var asyncResult2 = 0
+
+group.enter()
+DispatchQueue.global().async {
+    asyncResult1 = delayedSum1()
+    group.leave()
+}
+
+group.enter()
+DispatchQueue.global().async {
+    asyncResult2 = delayedSum2()
+    group.leave()
+}
+
+group.wait()
+
+let asyncSum = asyncResult1 + asyncResult2
+
+let asyncEndTime = Date()
+let asyncTimeElapsed = asyncEndTime.timeIntervalSince(startTime)
+print("Сумма (асинхронный вызов): \(asyncSum), Время выполнения: \(asyncTimeElapsed) секунд")
+------------------------------------------------
+import Foundation
+
+func delay(_ seconds: Int, completion: @escaping () -> Void) {
+    DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(seconds)) {
+        completion()
+    }
+}
+
+func sum(_ a: Int, _ b: Int, completion: @escaping (Int) -> Void) {
+    completion(a + b)
+}
+
+print("I'm sleeping 0 ...")
+delay(1) {
+    print("I'm sleeping 1 ...")
+    delay(1) {
+        print("I'm sleeping 2 ...")
+        sum(3, 4) { result in
+            print("main: I'm tired of waiting! I'm running finally")
+            print("main: Now I can quit.")
+        }
+    }
+}
+
+RunLoop.main.run(until: Date(timeIntervalSinceNow: 5))
